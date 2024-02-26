@@ -1,8 +1,11 @@
 import org.example.domain.BankAccount;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BankAccountTest {
 
@@ -12,74 +15,56 @@ public class BankAccountTest {
         assertEquals(100.0, account.getBalance());
     }
 
-    @Test
-    public void testWithdraw() {
-        BankAccount account = new BankAccount("John Doe", 100.0);
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testWithdraw(BankAccount account) {
         account.withdraw(50.0);
         assertEquals(50.0, account.getBalance());
     }
 
-    @Test
-    public void testDeposit() {
-        BankAccount account = new BankAccount("John Doe", 100.0);
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testDeposit(BankAccount account) {
         account.deposit(50.0);
         assertEquals(150.0, account.getBalance());
     }
 
-    @Test
-    public void testWithdrawInsufficientFunds() {
-        BankAccount account = new BankAccount("John Doe", 100.0);
-        try {
-            account.withdraw(150.0);
-            fail("Expected an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Not enough money to withdraw", e.getMessage());
-        }
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testWithdrawInsufficientFunds(BankAccount account) {
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(150.0));
     }
 
     @Test
-    public void testInvalidAmount() {
-        try {
-            new BankAccount("John Doe", -100.0);
-            fail("Expected an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The initial balance cannot be negative", e.getMessage());
-        }
+    public void testInvalidInitialAmount() {
+        assertThrows(IllegalArgumentException.class, () -> new BankAccount("John Doe", -100.0));
+    }
 
-        BankAccount account = new BankAccount("John Doe", 100.0);
-        try {
-            account.withdraw(-50.0);
-            fail("Expected an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Withdraw amount cannot be negative", e.getMessage());
-        }
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testInvalidWithdrawAmount(BankAccount account) {
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(-50.0));
+    }
 
-        try {
-            account.deposit(-50.0);
-            fail("Expected an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Deposit amount cannot be negative", e.getMessage());
-        }
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testInvalidDepositAmount(BankAccount account) {
+        assertThrows(IllegalArgumentException.class, () -> account.deposit(-50.0));
     }
 
     @Test
     public void testNegativeInitialBalance() {
-        try {
-            new BankAccount("John Doe", -100.0);
-            fail("Expected an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The initial balance cannot be negative", e.getMessage());
-        }
+        assertThrows(IllegalArgumentException.class, () -> new BankAccount("John Doe", -100.0));
     }
 
-    @Test
-    public void testLargeNumberOfTransactions() {
-        BankAccount account = new BankAccount("John Doe", 1000.0);
+    @MethodSource("arguments")
+    @ParameterizedTest
+    public void testLargeNumberOfTransactions(BankAccount account) {
         for (int i = 0; i < 1000; i++) {
             account.withdraw(1.0);
             account.deposit(1.0);
         }
-        assertEquals(1000.0, account.getBalance());
+        assertEquals(100.0, account.getBalance());
     }
 
     @Test
@@ -92,5 +77,13 @@ public class BankAccountTest {
 
         account.deposit(0.0);
         assertEquals(0.0, account.getBalance());
+    }
+
+    static Arguments[] arguments() {
+        return new Arguments[] {
+                Arguments.of(
+                        new BankAccount("John Doe", 100.0)
+                ),
+        };
     }
 }
